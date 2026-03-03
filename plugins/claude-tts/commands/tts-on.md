@@ -3,10 +3,8 @@ description: Enable text-to-speech for Claude responses
 allowed-tools: [Bash]
 ---
 
-Enable the Claude TTS plugin by running:
+Run this exact command:
 
 ```bash
-touch ~/.claude/tts-enabled
+touch ~/.claude/tts-enabled && echo "TTS enabled. Claude responses will now be spoken aloud."
 ```
-
-Then confirm to the user: "TTS enabled. Claude responses will now be spoken aloud."
