@@ -1,9 +1,13 @@
 #!/usr/bin/env bash
 # tts-worker.sh — Background worker: clean text, call TTS provider, queue audio.
-# Supports: elevenlabs, openai, google, amazon, azure, say (macOS fallback)
+# Supports: elevenlabs, openai, google, amazon, azure, local (system TTS fallback)
 # Usage: tts-worker.sh <temp-message-file>
 
 set -uo pipefail
+
+# Source cross-platform abstraction layer
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+source "${SCRIPT_DIR}/platform.sh"
 
 TEMP_FILE="${1:-}"
 if [[ -z "$TEMP_FILE" || ! -f "$TEMP_FILE" ]]; then
@@ -72,8 +76,11 @@ elif [[ -n "${ELEVENLABS_API_KEY:-}" && ("$PROVIDER" == "elevenlabs" || -z "$PRO
   [[ -z "$PROVIDER" ]] && PROVIDER="elevenlabs"
 fi
 
-# Default to say if no provider configured
-[[ -z "$PROVIDER" ]] && PROVIDER="say"
+# Backward compat: map "say" → "local"
+[[ "$PROVIDER" == "say" ]] && PROVIDER="local"
+
+# Default to local if no provider configured
+[[ -z "$PROVIDER" ]] && PROVIDER="local"
 
 # --- Provider Defaults ---
 case "$PROVIDER" in
@@ -96,7 +103,7 @@ case "$PROVIDER" in
     [[ -z "$VOICE_ID" ]] && VOICE_ID="en-US-JennyNeural"
     [[ -z "$REGION" ]] && REGION="eastus"
     ;;
-  say) ;;
+  local) ;;
 esac
 
 # --- Queue Setup ---
@@ -254,14 +261,14 @@ tts_azure() {
   validate_audio "$AUDIO_FILE"
 }
 
-tts_say() {
-  if ! command -v say &>/dev/null; then
+tts_local_fallback() {
+  if ! check_local_tts; then
     return 1
   fi
-  AUDIO_FILE="${QUEUE_DIR}/${SEQ_PADDED}.aiff"
-  local say_text="${CLEANED:0:2000}"
-  say -o "$AUDIO_FILE" "$say_text" 2>/dev/null
-  if [[ ! -f "$AUDIO_FILE" || $(stat -f%z "$AUDIO_FILE" 2>/dev/null || echo "0") -lt 100 ]]; then
+  AUDIO_FILE="${QUEUE_DIR}/${SEQ_PADDED}.wav"
+  local local_text="${CLEANED:0:2000}"
+  tts_local "$local_text" "$AUDIO_FILE"
+  if [[ ! -f "$AUDIO_FILE" || $(file_size "$AUDIO_FILE") -lt 100 ]]; then
     rm -f "$AUDIO_FILE"
     return 1
   fi
@@ -274,7 +281,7 @@ validate_audio() {
     return 1
   fi
   local size
-  size=$(stat -f%z "$file" 2>/dev/null || echo "0")
+  size=$(file_size "$file")
   if [[ "$size" -lt 1024 ]]; then
     rm -f "$file"
     return 1
@@ -283,7 +290,7 @@ validate_audio() {
 }
 
 # --- Provider Dispatch ---
-if [[ "$PROVIDER" != "say" && -n "$API_KEY" ]]; then
+if [[ "$PROVIDER" != "local" && -n "$API_KEY" ]]; then
   case "$PROVIDER" in
     elevenlabs) tts_elevenlabs || USE_FALLBACK=true ;;
     openai)     tts_openai     || USE_FALLBACK=true ;;
@@ -296,16 +303,15 @@ else
   USE_FALLBACK=true
 fi
 
-# --- macOS say Fallback ---
+# --- Local TTS Fallback ---
 if [[ "$USE_FALLBACK" == true ]]; then
-  if ! tts_say; then
+  if ! tts_local_fallback; then
     echo "[claude-tts] All TTS backends failed" >&2
     exit 1
   fi
 fi
 
 # --- Start Queue Daemon if Not Running ---
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 DAEMON_PID_FILE="${QUEUE_DIR}/daemon.pid"
 DAEMON_RUNNING=false
 

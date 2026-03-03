@@ -1,6 +1,6 @@
 # claude-tts
 
-Text-to-speech plugin for Claude Code. Automatically speaks Claude's responses aloud using your choice of TTS provider, with macOS `say` as a universal fallback.
+Text-to-speech plugin for Claude Code. Automatically speaks Claude's responses aloud using your choice of TTS provider, with local system TTS as a universal fallback.
 
 ## Supported Providers
 
@@ -11,12 +11,16 @@ Text-to-speech plugin for Claude Code. Automatically speaks Claude's responses a
 | **Google Cloud** | Very good | Paid (free tier available) | API key |
 | **Amazon Polly** | Good | Paid (free tier available) | AWS CLI configured |
 | **Azure Speech** | Very good | Paid (free tier available) | API key + region |
-| **macOS say** | Basic | Free | macOS built-in |
+| **Local TTS** | Basic | Free | Built-in (see below) |
 
 ## Requirements
 
-- macOS (uses `afplay` for audio playback)
-- `jq` (`brew install jq`)
+- **macOS**, **Linux**, or **Windows** (Git Bash / WSL)
+- `jq` (see [jq downloads](https://jqlang.github.io/jq/download/))
+- An audio player:
+  - macOS: `afplay` (built-in)
+  - Linux: `mpv`, `ffplay`, `paplay`, or `aplay`
+  - Windows: PowerShell (built-in)
 
 ## Install
 
@@ -48,7 +52,7 @@ Restart Claude Code after installing.
 /claude-tts:tts-setup google AIza...
 /claude-tts:tts-setup amazon
 /claude-tts:tts-setup azure your-key-here
-/claude-tts:tts-setup say
+/claude-tts:tts-setup local
 ```
 
 ### Provider details
@@ -60,11 +64,14 @@ Restart Claude Code after installing.
 | google | `en-US-Neural2-F` | n/a | `X-Goog-Api-Key` header |
 | amazon | `Joanna` | `neural` | AWS CLI env creds |
 | azure | `en-US-JennyNeural` | n/a | `Ocp-Apim-Subscription-Key` header |
-| say | system default | n/a | none |
+| local | system default | n/a | none |
 
 ### Without an API key
 
-The plugin works without any API key using macOS built-in `say` command (lower quality but free and offline).
+The plugin works without any API key using your system's built-in TTS:
+- **macOS**: `say` command
+- **Linux**: `espeak-ng`, `espeak`, or `piper`
+- **Windows**: PowerShell SAPI (`System.Speech.Synthesis`)
 
 ## Usage
 
@@ -113,13 +120,17 @@ region: "eastus"
 
 If your config has `elevenlabs_api_key:` but no `provider:`, it will automatically be treated as ElevenLabs. No action needed.
 
+### Migration from v2 (say → local)
+
+If your config has `provider: "say"`, it will automatically be mapped to `local`. No action needed.
+
 ## How it works
 
 1. Claude finishes a response (Stop hook fires)
 2. Text is cleaned: code blocks, URLs, file paths, and markdown formatting are stripped
 3. A background worker sends the text to your configured provider
-4. If the provider fails, macOS `say` is used as fallback
-5. Audio files are queued and played sequentially via `afplay`
+4. If the provider fails, local system TTS is used as fallback
+5. Audio files are queued and played sequentially via the platform audio player
 
 The hook exits immediately so Claude Code is never blocked.
 
@@ -127,17 +138,27 @@ The hook exits immediately so Claude Code is never blocked.
 
 **No audio playing**
 1. Run `/claude-tts:tts-status` to check configuration
-2. Make sure `jq` is installed: `brew install jq`
+2. Make sure `jq` is installed (see [jq downloads](https://jqlang.github.io/jq/download/))
 3. Check that `~/.claude/tts-enabled` exists
 
 **Provider errors**
 - Verify your API key and provider settings
 - Check your usage quota with the provider
-- The plugin falls back to macOS `say` automatically on API errors
+- The plugin falls back to local TTS automatically on API errors
 
 **Audio queue stuck**
 - Kill the daemon: `kill $(cat ${TMPDIR}/claude_tts_queue/daemon.pid)`
-- Clear the queue: `rm -f ${TMPDIR}/claude_tts_queue/*.mp3 ${TMPDIR}/claude_tts_queue/*.aiff`
+- Clear the queue: `rm -f ${TMPDIR}/claude_tts_queue/*.mp3 ${TMPDIR}/claude_tts_queue/*.wav`
+
+**Linux: No audio player**
+- Install one: `sudo apt install mpv` (or `ffmpeg` for ffplay, `pulseaudio-utils` for paplay)
+
+**Linux: No local TTS**
+- Install espeak-ng: `sudo apt install espeak-ng`
+
+**Windows (Git Bash / WSL)**
+- PowerShell must be available as `powershell.exe`
+- WSL users: audio playback requires PulseAudio or PipeWire bridge to Windows
 
 ## License
 

@@ -4,6 +4,9 @@
 
 set -uo pipefail
 
+# Source cross-platform abstraction layer
+source "$(cd "$(dirname "$0")" && pwd)/platform.sh"
+
 QUEUE_DIR="${TMPDIR:-/tmp}/claude_tts_queue"
 mkdir -p "$QUEUE_DIR"
 
@@ -18,13 +21,13 @@ trap cleanup EXIT
 IDLE=0
 
 while true; do
-  # Find the next audio file (mp3 or aiff, sorted by name for sequence order)
-  NEXT=$(ls -1 "${QUEUE_DIR}/"*.mp3 "${QUEUE_DIR}/"*.aiff 2>/dev/null | sort | head -1 || true)
+  # Find the next audio file (mp3 or wav, sorted by name for sequence order)
+  NEXT=$(ls -1 "${QUEUE_DIR}/"*.mp3 "${QUEUE_DIR}/"*.wav 2>/dev/null | sort | head -1 || true)
 
   if [[ -n "$NEXT" && -f "$NEXT" ]]; then
     IDLE=0
     # Play audio (blocking)
-    afplay "$NEXT" 2>/dev/null || true
+    play_audio "$NEXT" 2>/dev/null || true
     # Remove after playing
     rm -f "$NEXT"
   else

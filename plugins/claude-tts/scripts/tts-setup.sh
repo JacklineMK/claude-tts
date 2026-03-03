@@ -6,10 +6,16 @@ set -euo pipefail
 
 PLUGIN_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 CONFIG_FILE="$HOME/.claude/claude-tts.local.md"
-VALID_PROVIDERS="elevenlabs openai google amazon azure say"
+VALID_PROVIDERS="elevenlabs openai google amazon azure local"
+
+# Source cross-platform abstraction layer
+source "${PLUGIN_ROOT}/hooks/scripts/platform.sh"
 
 PROVIDER="${1:-}"
 API_KEY="${2:-}"
+
+# Backward compat: map "say" → "local"
+[[ "$PROVIDER" == "say" ]] && PROVIDER="local"
 
 if [[ -z "$PROVIDER" ]]; then
   echo "=== Claude TTS Setup ==="
@@ -22,12 +28,12 @@ if [[ -z "$PROVIDER" ]]; then
   echo "  google      — Google Cloud Text-to-Speech"
   echo "  amazon      — Amazon Polly (uses AWS CLI creds)"
   echo "  azure       — Azure Cognitive Services Speech"
-  echo "  say         — macOS built-in (free, no key needed)"
+  echo "  local       — System built-in TTS (free, no key needed)"
   echo ""
   echo "Examples:"
   echo "  /claude-tts:tts-setup elevenlabs sk_abc123"
   echo "  /claude-tts:tts-setup openai sk-abc123"
-  echo "  /claude-tts:tts-setup say"
+  echo "  /claude-tts:tts-setup local"
   exit 1
 fi
 
@@ -49,12 +55,12 @@ fi
 # Check jq
 if ! command -v jq &>/dev/null; then
   echo "WARNING: jq is not installed. It is required for the TTS hook."
-  echo "Install with: brew install jq"
+  echo "Install with: $(install_hint jq)"
   echo ""
 fi
 
 # Require API key for cloud providers
-if [[ "$PROVIDER" != "say" && "$PROVIDER" != "amazon" && -z "$API_KEY" ]]; then
+if [[ "$PROVIDER" != "local" && "$PROVIDER" != "amazon" && -z "$API_KEY" ]]; then
   echo "ERROR: API key required for $PROVIDER"
   echo ""
   case "$PROVIDER" in
@@ -68,13 +74,13 @@ fi
 
 # Write config file
 mkdir -p "$HOME/.claude"
-if [[ "$PROVIDER" == "say" ]]; then
+if [[ "$PROVIDER" == "local" ]]; then
   cat > "$CONFIG_FILE" << EOF
 ---
-provider: "say"
+provider: "local"
 ---
 
-Claude TTS configuration. Provider: macOS say (built-in).
+Claude TTS configuration. Provider: local system TTS.
 EOF
 elif [[ "$PROVIDER" == "amazon" ]]; then
   cat > "$CONFIG_FILE" << EOF
@@ -150,7 +156,7 @@ case "$PROVIDER" in
       aws polly synthesize-speech --output-format mp3 --voice-id Joanna --engine neural \
         --text "$TEST_TEXT" "$TEST_FILE" &>/dev/null && HTTP_CODE="200" || HTTP_CODE="000"
     else
-      echo "AWS CLI not found. Install with: brew install awscli"
+      echo "AWS CLI not found. Install with: $(install_hint awscli)"
       HTTP_CODE="000"
     fi
     ;;
@@ -165,26 +171,37 @@ case "$PROVIDER" in
       -H "X-Microsoft-OutputFormat: audio-16khz-128kbitrate-mono-mp3" \
       -d "$SSML" 2>/dev/null || echo "000")
     ;;
-  say)
-    if command -v say &>/dev/null; then
-      say "$TEST_TEXT" 2>/dev/null && test_passed=true || true
-      echo "macOS say: OK"
+  local)
+    if check_local_tts; then
+      tts_local_speak "$TEST_TEXT" && test_passed=true || true
+      echo "Local TTS ($CLAUDE_TTS_OS): OK"
       echo ""
       echo "Setup complete!"
       exit 0
     else
-      echo "macOS say: NOT AVAILABLE"
+      echo "Local TTS: NOT AVAILABLE"
+      case "$CLAUDE_TTS_OS" in
+        linux)   echo "Install with: $(install_hint espeak-ng)" ;;
+        windows) echo "Windows SAPI should be available. Check PowerShell." ;;
+      esac
       exit 1
     fi
     ;;
 esac
 
 if [[ "$HTTP_CODE" == "200" && -f "$TEST_FILE" ]]; then
-  FILE_SIZE=$(stat -f%z "$TEST_FILE" 2>/dev/null || echo "0")
+  FILE_SIZE=$(file_size "$TEST_FILE")
   if [[ "$FILE_SIZE" -gt 1024 ]]; then
     echo "$PROVIDER API: OK (${FILE_SIZE} bytes)"
-    echo "Playing test audio..."
-    afplay "$TEST_FILE" 2>/dev/null || true
+    if check_audio_player; then
+      echo "Playing test audio..."
+      play_audio "$TEST_FILE" 2>/dev/null || true
+    else
+      echo "No audio player found — skipping playback test."
+      case "$CLAUDE_TTS_OS" in
+        linux) echo "Install with: $(install_hint mpv)" ;;
+      esac
+    fi
     rm -f "$TEST_FILE"
     echo ""
     echo "Setup complete! TTS is ready."
@@ -198,9 +215,9 @@ echo "Check your API key and try again."
 echo ""
 
 # Fallback test
-if command -v say &>/dev/null; then
-  echo "Falling back to macOS say..."
-  say "$TEST_TEXT" 2>/dev/null && echo "macOS say: OK" || echo "macOS say: FAILED"
+if check_local_tts; then
+  echo "Falling back to local TTS..."
+  tts_local_speak "$TEST_TEXT" && echo "Local TTS: OK" || echo "Local TTS: FAILED"
 fi
 
 echo ""
