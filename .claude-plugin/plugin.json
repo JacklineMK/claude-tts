@@ -1,0 +1,8 @@
+{
+  "name": "claude-tts",
+  "version": "1.0.0",
+  "description": "Text-to-speech for Claude Code responses using ElevenLabs with macOS fallback",
+  "author": { "name": "Youssef" },
+  "license": "MIT",
+  "keywords": ["tts", "text-to-speech", "voice", "audio", "elevenlabs", "speech"]
+}
