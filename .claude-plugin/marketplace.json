@@ -1,7 +1,9 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "claude-tts-marketplace",
-  "description": "Text-to-speech plugin for Claude Code with multi-provider support",
+  "metadata": {
+    "description": "Text-to-speech plugin for Claude Code with multi-provider support"
+  },
   "owner": {
     "name": "Youssef"
   },
